@@ -14,6 +14,15 @@ pipeline {
                     }
                 }
             }
+            post {
+                success {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "=========================================\nPipeline Start: Job ${env.JOB_NAME} (${env.BUILD_NUMBER})"
+                    )
+                }
+            }
         }
         stage('secret.yml download') {
             steps {
@@ -29,6 +38,22 @@ pipeline {
             steps {
                 script {
                     sh './gradlew bootJar'
+                }
+            }
+            post {
+                success {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "Success: Build Jar"
+                    )
+                }
+                failure {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#FF3232', 
+                        message: "Fail: Build Jar"
+                    )
                 }
             }
         }
@@ -53,9 +78,19 @@ pipeline {
             post {
                 success {
                     echo "The ECR Upload stage successfully."
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "Success: ECR Upload"
+                    )
                 }
                 failure {
                     echo "The ECR Upload stage failed."
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#FF3232', 
+                        message: "Fail: ECR Upload"
+                    )
                 }
             }
         }
@@ -74,12 +109,44 @@ pipeline {
                     }
                 }
             }
+            post {
+                success {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "Success: Git Clone KEAPoint/OnLog-k8s"
+                    )
+                }
+                failure {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#FF3232', 
+                        message: "Fail: Git Clone KEAPoint/OnLog-k8s"
+                    )
+                }
+            }
         }
         stage('Update Kubernetes Manifests') {
             steps {
                 script {
                     // deploy-blog-server.yml 파일 내의 빌드 넘버를 바꿈
                     sh "sed -i 's|kea-004-onlog-blog-server:.*|kea-004-onlog-blog-server:${env.BUILD_NUMBER}|' /var/jenkins_home/workspace/onlog-back-blog/base/backend/deployment/deploy-blog-server.yml"
+                }
+            }
+            post {
+                success {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "Success: Update Kubernetes Manifests"
+                    )
+                }
+                failure {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#FF3232', 
+                        message: "Fail :Update Kubernetes Manifests"
+                    )
                 }
             }
         }
@@ -101,6 +168,38 @@ pipeline {
                     }
                 }
             }
+            post {
+                success {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "Success: Git Push to K8S Manifest Repository"
+                    )
+                }
+                failure {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#FF3232', 
+                        message: "Fail: Git Push to K8S Manifest Repository"
+                    )
+                }
+            }
+        }
+    }
+    post {
+        success {
+            slackSend (
+                channel: '#jenkins-notification', 
+                color: '#2C953C', 
+                message: "SUCCESS: Job ${env.JOB_NAME} (${env.BUILD_NUMBER})\n========================================="
+            )
+        }
+        failure {
+            slackSend (
+                channel: '#jenkins-notification', 
+                color: '#FF3232', 
+                message: "FAIL: Job ${env.JOB_NAME} (${env.BUILD_NUMBER})\n========================================="
+            )
         }
     }
 }

@@ -14,6 +14,15 @@ pipeline {
                     }
                 }
             }
+            post {
+                success {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "=========================================\nPipeline Start: Job ${env.JOB_NAME} (${env.BUILD_NUMBER})"
+                    )
+                }
+            }
         }
         stage('ECR Upload') {
             steps{
@@ -36,9 +45,19 @@ pipeline {
             post {
                 success {
                     echo "The ECR Upload stage successfully."
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "Success: ECR Upload"
+                    )
                 }
                 failure {
                     echo "The ECR Upload stage failed."
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#FF3232', 
+                        message: "Fail: ECR Upload"
+                    )
                 }
             }
         }
@@ -56,11 +75,43 @@ pipeline {
                     }
                 }
             }
+            post {
+                success {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "Success: Git Clone KEAPoint/OnLog-k8s"
+                    )
+                }
+                failure {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#FF3232', 
+                        message: "Fail: Git Clone KEAPoint/OnLog-k8s"
+                    )
+                }
+            }
         }
         stage('Update Kubernetes Manifests') {
             steps {
                 script {
                     sh "sed -i 's|kea-004-onlog-image-recommendation-server:.*|kea-004-onlog-image-recommendation-server:${env.BUILD_NUMBER}|' /var/jenkins_home/workspace/onlog-image-recommendation-ci-cd/base/backend/deployment/deploy-image-recommendation-server.yml"
+                }
+            }
+            post {
+                success {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "Success: Update Kubernetes Manifests"
+                    )
+                }
+                failure {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#FF3232', 
+                        message: "Fail :Update Kubernetes Manifests"
+                    )
                 }
             }
         }
@@ -82,6 +133,38 @@ pipeline {
                     }
                 }
             }
+            post {
+                success {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "Success: Git Push to K8S Manifest Repository"
+                    )
+                }
+                failure {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#FF3232', 
+                        message: "Fail: Git Push to K8S Manifest Repository"
+                    )
+                }
+            }
+        }
+    }
+    post {
+        success {
+            slackSend (
+                channel: '#jenkins-notification', 
+                color: '#2C953C', 
+                message: "SUCCESS: Job ${env.JOB_NAME} (${env.BUILD_NUMBER})\n========================================="
+            )
+        }
+        failure {
+            slackSend (
+                channel: '#jenkins-notification', 
+                color: '#FF3232', 
+                message: "FAIL: Job ${env.JOB_NAME} (${env.BUILD_NUMBER})\n========================================="
+            )
         }
     }
 }

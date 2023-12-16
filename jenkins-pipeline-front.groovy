@@ -1,16 +1,5 @@
 pipeline {
-    agent any
-    
-    environment {
-        PEM_KEY_PATH = credentials('keapointPemKey')
-        REMOTE_WS1_HOST = '10.0.36.168'
-        REMOTE_WS2_HOST = '10.0.36.22'
-        PROXY_HOST = '10.0.14.190'
-        PROXY_PORT = '4094'
-        REGISTRY_URL = "629515838455.dkr.ecr.us-east-1.amazonaws.com"
-
-    }
-        
+    agent any 
     stages {
         stage('Git Clone') {
             steps {
@@ -24,6 +13,15 @@ pipeline {
                         env.cloneResult=false
                         currentBuild.result = 'FAILURE'
                     }
+                }
+            }
+            post {
+                success {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "=========================================\nPipeline Start: Job ${env.JOB_NAME} (${env.BUILD_NUMBER})"
+                    )
                 }
             }
         }
@@ -49,9 +47,19 @@ pipeline {
             post {
                 success {
                     echo "The ECR Upload stage successfully."
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "Success: ECR Upload"
+                    )
                 }
                 failure {
                     echo "The ECR Upload stage failed."
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#FF3232', 
+                        message: "Fail: ECR Upload"
+                    )
                 }
             }
         }
@@ -71,11 +79,43 @@ pipeline {
                     }
                 }
             }
+            post {
+                success {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "Success: Git Clone KEAPoint/OnLog-k8s"
+                    )
+                }
+                failure {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#FF3232', 
+                        message: "Fail: Git Clone KEAPoint/OnLog-k8s"
+                    )
+                }
+            }
         }
         stage('Update Kubernetes Manifests') {
             steps {
                 script {
                     sh "sed -i 's|kea-004-onlog-front:.*|kea-004-onlog-front:${env.BUILD_NUMBER}|' /var/jenkins_home/workspace/onlog-front-deploy/base/frontend/deployment/deploy-onlog-front.yaml"
+                }
+            }
+            post {
+                success {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "Success: Update Kubernetes Manifests"
+                    )
+                }
+                failure {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#FF3232', 
+                        message: "Fail :Update Kubernetes Manifests"
+                    )
                 }
             }
         }
@@ -97,6 +137,39 @@ pipeline {
                     }
                 }
             }
+            post {
+                success {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#2C953C', 
+                        message: "Success: Git Push to K8S Manifest Repository"
+                    )
+                }
+                failure {
+                    slackSend (
+                        channel: '#jenkins-notification', 
+                        color: '#FF3232', 
+                        message: "Fail: Git Push to K8S Manifest Repository"
+                    )
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            slackSend (
+                channel: '#jenkins-notification', 
+                color: '#2C953C', 
+                message: "SUCCESS: Job ${env.JOB_NAME} (${env.BUILD_NUMBER})\n========================================="
+            )
+        }
+        failure {
+            slackSend (
+                channel: '#jenkins-notification', 
+                color: '#FF3232', 
+                message: "FAIL: Job ${env.JOB_NAME} (${env.BUILD_NUMBER})\n========================================="
+            )
         }
     }
 }
