@@ -123,7 +123,7 @@ pipeline {
                             sh 'git config --global user.name "${GIT_USERNAME}"'
                             sh 'git config --global user.email "ws32159@naver.com"'
                             sh 'cd /var/jenkins_home/workspace/onlog-image-recommendation-ci-cd/base && git add .'
-                            sh 'cd /var/jenkins_home/workspace/onlog-image-recommendation-ci-cd/base && git commit -m "Update image-recommedation from Jenkins pipeline"'
+                            sh "cd /var/jenkins_home/workspace/onlog-image-recommendation-ci-cd/base && git commit -m \"Update image-recommedation ver.${env.BUILD_NUMBER} from Jenkins pipeline\""
                             sh 'git remote set-url origin https://Bal1oon:$GIT_TOKEN@github.com/KEAPoint/OnLog-k8s.git'
                             sh 'cd /var/jenkins_home/workspace/onlog-image-recommendation-ci-cd/base && git push origin main'
                         } catch (error) {

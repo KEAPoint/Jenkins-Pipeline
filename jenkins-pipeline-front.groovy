@@ -127,7 +127,7 @@ pipeline {
                             sh 'git config --global user.name "${GIT_USERNAME}"'
                             sh 'git config --global user.email "ws32159@naver.com"'
                             sh 'cd /var/jenkins_home/workspace/onlog-front-deploy/base && git add .'
-                            sh 'cd /var/jenkins_home/workspace/onlog-front-deploy/base && git commit -m "Update onlog-front from Jenkins pipeline"'
+                            sh "cd /var/jenkins_home/workspace/onlog-front-deploy/base && git commit -m \"Update onlog-front ver.${env.BUILD_NUMBER} from Jenkins pipeline\""
                             sh 'git remote set-url origin https://Bal1oon:$GIT_TOKEN@github.com/KEAPoint/OnLog-k8s.git'
                             sh 'cd /var/jenkins_home/workspace/onlog-front-deploy/base && git push origin main'
                         } catch (error) {
